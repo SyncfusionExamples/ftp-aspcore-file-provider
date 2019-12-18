@@ -6,13 +6,13 @@ This repository contains the ASP.NET Core file transfer protocol file system pro
 
 A file system provider is an API for access to the hosted file system using File Transfer Protocol(**FTP**) in the FileManager control. It also provides the methods for performing various file actions like creating a new folder, renaming files and deleting files.
 
-ASP.NET Core file system provider serves the physical file system for the file manager component.
+ASP.NET Core FTP file system provider serves the FTP file system for the file manager component.
 
 The following actions can be performed with ASP.NET Core file system Provider.
 
 | **Actions** | **Description** |
 | --- | --- |
-| Read      | Reads the files from the local file storage. |
+| Read      | Reads the files from the FTP file storage. |
 | Details   | Gets a file's metadata which consists of Type, Size, Location and Modified date. |
 | Download  | Downloads the selected file or folder. |
 | Upload    | Upload's the file in hosted file system. It accepts uploaded media with the following characteristics: <ul><li>Maximum file size:  30MB</li><li>Accepted Media MIME types: `*/*` </li></ul> |
@@ -26,13 +26,12 @@ The following actions can be performed with ASP.NET Core file system Provider.
 
 ## Prerequisites
 
-To run the service, open the `FTPFileProvider` and register the FTP  details like *hostName*, *userName*, *password* details in the `RootFolder` method to perform the file operations. 
+To run the service, open the `FTPFileProvider` and register the FTP  details like *hostName*, *userName*, *password* details in the `SetFTPConnection` method to perform the file operations. 
 
-> Provide the *hostName* parameter as like root path in the `rootFolder` method.
-
+> Provide the *hostName* parameter as like root path in the `SetFTPConnection` method.
 
 ```
-   void RootFolder(string hostName, string userName, string password);   
+   void SetFTPConnection(string hostName, string userName, string password);   
 ```
 
 ## How to run this application?
