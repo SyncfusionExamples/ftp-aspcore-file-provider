@@ -8,7 +8,7 @@
 
 - Support has been provided for upload customization.
 
-## 18.1.0.52 (2020-05-13)
+## 17.4.39 (2019-12-17)
 
 ### FTP File Provider
 
