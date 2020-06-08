@@ -761,11 +761,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     {
                         if (this.IsExist(fullPath, name))
                         {
-                            bool isFile = this.IsFile(fullPath, name);
-                            if (isFile)
-                            {
-                                this.DeleteFile(fullName);
-                            }
+                            this.DeleteFile(fullName);
                         }
                         this.UploadFile(file, fullName);
                     }

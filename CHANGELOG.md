@@ -2,10 +2,16 @@
 
 ## [Unreleased]
 
-## 17.4.39 (2019-12-17)
-
-### FTP File System Provider
+### FTP File Provider
 
 #### New Features
 
-- Added filesystem provider support for File Transfer Protocol.
+- Support has been provided for upload customization.
+
+## 17.4.39 (2019-12-17)
+
+### FTP File Provider
+
+#### New Features
+
+- Added file provider support for File Transfer Protocol.
