@@ -1,6 +1,6 @@
-# ASP.NET Core FTP service for the file manager component
+# FTP service for the file manager component
 
-This repository contains the ASP.NET Core file transfer protocol file system providers for the Essential JS 2 File Manager component.
+This repository contains the ASP.NET Core file transfer protocol file system providers for the Syncfusion File Manager component.
 
 ## Key Features
 
@@ -36,14 +36,14 @@ To run the service, open the `FTPFileProvider` and register the FTP  details lik
 
 ## How to run this application?
 
-To run this application, you need to first clone the `ej2-ftp-aspcore-file-provider` repository and then navigate to its appropriate path where it has been located in your system.
+To run this application, you need to first clone the `ftp-aspcore-file-provider` repository and then navigate to its appropriate path where it has been located in your system.
 
 To do so, open the command prompt and run the below commands one after the other.
 
 ```
-git clone https://github.com/SyncfusionExamples/ej2-ftp-aspcore-file-provider  ej2-ftp-aspcore-file-provider
+git clone https://github.com/SyncfusionExamples/ftp-aspcore-file-provider  ftp-aspcore-file-provider
 
-cd ej2-ftp-aspcore-file-provider
+cd ftp-aspcore-file-provider
 
 ```
 
