@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -1373,7 +1374,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             {
                 throw new Exception("Non implemented response format");
             }
-            details.Modified = Convert.ToDateTime(parsedLine.Groups["Modified"].Value);
+            details.Modified = DateTime.Parse(parsedLine.Groups["Modified"].Value, CultureInfo.InvariantCulture);
             details.Size = details.IsFile ? Convert.ToInt64(parsedLine.Groups["FileSize"].Value) : 0;
             details.Name = parsedLine.Groups["FileName"].Value;
             return details;
