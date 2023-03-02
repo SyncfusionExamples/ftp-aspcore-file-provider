@@ -43,6 +43,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             {
                 this.RemoveTempImage();
                 string fullPath = this.RootPath + path;
+                fullPath = fullPath.Replace("../", "");
 
                 FileManagerDirectoryContent cwd = new FileManagerDirectoryContent();
                 FileManagerDirectoryContent cwdData = data.Length == 0 ? null : data[0];
@@ -97,6 +98,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             try
             {
                 string fullPath = this.RootPath + path;
+                fullPath = fullPath.Replace("../", "");
                 string directoryPath = fullPath + name;
                 try
                 {
@@ -157,14 +159,17 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     if (names.Length == 0)
                     {
                         fullPath = (this.RootPath + path.Substring(0, path.Length - 1));
+                        fullPath = fullPath.Replace("../", "");
                     }
                     else if (names[0] == null || names[0] == "")
                     {
                         fullPath = (this.RootPath + path);
+                        fullPath = fullPath.Replace("../", "");
                     }
                     else
                     {
                         fullPath = Path.Combine(this.RootPath + path, names[0]);
+                        fullPath = fullPath.Replace("../", "");
                     }
                     string[] fileDetails = this.SplitPath(fullPath, true);
                     bool isFile = data[0].IsFile;
@@ -187,10 +192,12 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                         if (names[i] == null)
                         {
                             fullPath = this.RootPath + path;
+                            fullPath = fullPath.Replace("../", "");
                         }
                         else
                         {
                             fullPath = (this.RootPath + path + names[i]);
+                            fullPath = fullPath.Replace("../", "");
                         }
                         string[] fileDetails = this.SplitPath(fullPath, true);
                         bool isFile = data[i].IsFile;
@@ -235,6 +242,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             try
             {
                 string basePath = this.RootPath + path;
+                basePath = basePath.Replace("../", "");
                 for (int i = 0; i < names.Length; i++)
                 {
                     string fullPath = basePath + names[i];
@@ -276,6 +284,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             try
             {
                 string basePath = this.RootPath + path;
+                basePath = basePath.Replace("../", "");
                 string fullPath = basePath + name;
                 string newFullPath = basePath + newName;
                 string oldName = fullPath.Split('/').Where(f => !string.IsNullOrEmpty(f)).LastOrDefault();
@@ -371,10 +380,12 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     renameFiles = new string[0];
                 }
                 string desPath = this.RootPath + targetPath;
+                desPath = desPath.Replace("../", "");
                 List<string> existingFiles = new List<string>();
                 List<string> missingFiles = new List<string>();
                 List<FileManagerDirectoryContent> items = new List<FileManagerDirectoryContent>();
                 string tempPath = this.RootPath + path;
+                tempPath = tempPath.Replace("../", "");
                 string srcPath = string.Empty;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -508,10 +519,12 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     renameFiles = new string[0];
                 }
                 string desPath = this.RootPath + targetPath;
+                desPath = desPath.Replace("../", "");
                 List<string> existingFiles = new List<string>();
                 List<string> missingFiles = new List<string>();
                 List<FileManagerDirectoryContent> items = new List<FileManagerDirectoryContent>();
                 string tempPath = this.RootPath + path;
+                tempPath = tempPath.Replace("../", "");
                 string srcPath = string.Empty;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -646,6 +659,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             {
                 this.RemoveTempImage();
                 string searchPath = this.RootPath + path;
+                searchPath = searchPath.Replace("../", "");
                 FileManagerDirectoryContent cwd = new FileManagerDirectoryContent();
                 cwd = this.GetPathDetails(searchPath, path, data[0]);
                 if (cwd.Permission != null && !cwd.Permission.Read)
@@ -672,6 +686,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             try
             {
                 string basePath = this.RootPath + path;
+                basePath = basePath.Replace("../", "");
                 int count = 0;
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -741,6 +756,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             try
             {
                 string fullPath = this.RootPath + path;
+                fullPath = fullPath.Replace("../", "");
                 List<string> existFiles = new List<string>();
                 foreach (IFormFile file in uploadFiles)
                 {
@@ -796,6 +812,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             try
             {
                 string fullPath = this.RootPath + path;
+                fullPath = fullPath.Replace("../", "");
                 string folderPath = Path.Combine(Path.GetTempPath(), "image_temp");
                 if (!Directory.Exists(folderPath))
                 {
@@ -1206,6 +1223,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
         protected FileStreamResult DownloadFolder(string path, string[] names, string tempPath, string folderPath, FileManagerDirectoryContent[] data)
         {
             string basePath = this.RootPath + path;
+            basePath = basePath.Replace("../", "");
             List<string> fileList = new List<string>();
             List<string> folderList = new List<string>();
             string fileName;
