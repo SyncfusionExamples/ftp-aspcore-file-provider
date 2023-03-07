@@ -19,7 +19,7 @@ namespace EJ2APIServices.Controllers
     public class FTPProviderController : Controller
     {
         public FTPFileProvider operation;
-        public FTPProviderController(IHostingEnvironment hostingEnvironment)
+        public FTPProviderController(IWebHostEnvironment hostingEnvironment)
         {
             this.operation = new FTPFileProvider();
             //Specify the FTP hostname, username and password
