@@ -20,6 +20,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
         protected string RootName;
         protected string UserName;
         protected string Password;
+        internal HttpResponse Response;
         protected NetworkCredential Credentials = null;
         AccessDetails AccessDetails = new AccessDetails();
 
@@ -241,6 +242,10 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             FileManagerResponse deleteResponse = new FileManagerResponse();
             try
             {
+                if (Response.HttpContext.Request.Host.Value == "ej2.syncfusion.com")
+                {
+                    throw new UnauthorizedAccessException("File Manager's delete functionality is restricted in the online demo. If you need to test delete functionality, please install Syncfusion Essential Studio on your machine and run the demo");
+                }
                 string basePath = this.RootPath + path;
                 basePath = basePath.Replace("../", "");
                 for (int i = 0; i < names.Length; i++)
@@ -272,7 +277,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             {
                 ErrorDetails er = new ErrorDetails();
                 er.Message = e.Message.ToString();
-                er.Code = er.Message.Contains("Access is denied") ? "401" : "417";
+                er.Code = er.Message.Contains("Access is denied") || er.Message.Contains("Syncfusion Essential Studio") ? "401" : "417";
                 deleteResponse.Error = er;
                 return deleteResponse;
             }
