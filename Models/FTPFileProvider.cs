@@ -35,7 +35,14 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             this.HostName = request.RequestUri.Host;
         }
 
-      
+        public void SetRules(AccessDetails details)
+        {
+            this.AccessDetails = details;
+            DirectoryInfo root = new DirectoryInfo(this.RootPath);
+            this.RootName = root.Name;
+        }
+
+
         public FileManagerResponse GetFiles(string path, bool showHiddenItems, params FileManagerDirectoryContent[] data)
         {
             FileManagerResponse readResponse = new FileManagerResponse();
@@ -67,6 +74,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     item.IsFile = isFile;
                     item.FilterPath = this.GetFilterPath(fullPath);
                     item.DateModified = detail.Modified;
+                    item.Permission = GetPathPermission(fullPath);
                     if (isFile)
                     {
                         item.Size = detail.Size;
@@ -993,7 +1001,8 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
 
         protected string GetPath(string path)
         {
-            return (this.RootPath + path);
+            DirectoryInfo directory = new DirectoryInfo(path);
+            return directory.FullName;
         }
 
         protected byte[] ConvertByte(Stream input)
@@ -1108,6 +1117,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             item.DateCreated = item.DateModified;
             item.HasChild = this.HasChild(nestedPath);
             item.Type = "";
+            item.Permission = GetPathPermission(nestedPath);
             items.Add(item);
         }
 
@@ -1405,6 +1415,140 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             public string Name { get; set; }
 
             public long Size { get; set; }
+        }
+
+        protected virtual AccessPermission GetPathPermission(string path)
+        {
+            string[] fileDetails = GetFolderDetails(path);
+            return GetPermission(GetPath(fileDetails[0]), fileDetails[1], false);
+        }
+
+        protected virtual string[] GetFolderDetails(string path)
+        {
+            string[] str_array = path.Split('/'), fileDetails = new string[2];
+            string parentPath = "";
+            for (int i = 0; i < str_array.Length - 2; i++)
+            {
+                parentPath += str_array[i] + "/";
+            }
+            fileDetails[0] = parentPath;
+            fileDetails[1] = str_array[str_array.Length - 2];
+            return fileDetails;
+        }
+
+        protected virtual string GetFilePath(string path)
+        {
+            return Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
+
+        }
+
+        protected virtual bool HasPermission(Permission rule)
+        {
+            return rule == Permission.Allow ? true : false;
+        }
+
+        protected virtual AccessPermission UpdateFileRules(AccessPermission filePermission, AccessRule fileRule)
+        {
+            filePermission.Copy = HasPermission(fileRule.Copy);
+            filePermission.Download = HasPermission(fileRule.Download);
+            filePermission.Write = HasPermission(fileRule.Write);
+            filePermission.Read = HasPermission(fileRule.Read);
+            filePermission.Message = string.IsNullOrEmpty(fileRule.Message) ? string.Empty : fileRule.Message;
+            return filePermission;
+        }
+        protected virtual AccessPermission UpdateFolderRules(AccessPermission folderPermission, AccessRule folderRule)
+        {
+            folderPermission.Copy = HasPermission(folderRule.Copy);
+            folderPermission.Download = HasPermission(folderRule.Download);
+            folderPermission.Write = HasPermission(folderRule.Write);
+            folderPermission.WriteContents = HasPermission(folderRule.WriteContents);
+            folderPermission.Read = HasPermission(folderRule.Read);
+            folderPermission.Upload = HasPermission(folderRule.Upload);
+            folderPermission.Message = string.IsNullOrEmpty(folderRule.Message) ? string.Empty : folderRule.Message;
+            return folderPermission;
+        }
+
+        protected virtual string GetValidPath(string path)
+        {
+            DirectoryInfo directory = new DirectoryInfo(path);
+            return directory.FullName;
+        }
+
+        protected virtual AccessPermission GetPermission(string location, string name, bool isFile)
+        {
+            AccessPermission FilePermission = new AccessPermission();
+            if (isFile)
+            {
+                if (this.AccessDetails.AccessRules == null) return null;
+                string nameExtension = Path.GetExtension(name).ToLower();
+                string fileName = Path.GetFileNameWithoutExtension(name);
+                string currentPath = GetFilePath(location + name);
+                foreach (AccessRule fileRule in AccessDetails.AccessRules)
+                {
+                    if (!string.IsNullOrEmpty(fileRule.Path) && fileRule.IsFile && (fileRule.Role == null || fileRule.Role == AccessDetails.Role))
+                    {
+                        if (fileRule.Path.IndexOf("*.*") > -1)
+                        {
+                            string parentPath = fileRule.Path.Substring(0, fileRule.Path.IndexOf("*.*"));
+                            if (currentPath.IndexOf(GetPath(parentPath)) == 0 || parentPath == "")
+                            {
+                                FilePermission = UpdateFileRules(FilePermission, fileRule);
+                            }
+                        }
+                        else if (fileRule.Path.IndexOf("*.") > -1)
+                        {
+                            string pathExtension = Path.GetExtension(fileRule.Path).ToLower();
+                            string parentPath = fileRule.Path.Substring(0, fileRule.Path.IndexOf("*."));
+                            if ((GetPath(parentPath) == currentPath || parentPath == "") && nameExtension == pathExtension)
+                            {
+                                FilePermission = UpdateFileRules(FilePermission, fileRule);
+                            }
+                        }
+                        else if (fileRule.Path.IndexOf(".*") > -1)
+                        {
+                            string pathName = Path.GetFileNameWithoutExtension(fileRule.Path);
+                            string parentPath = fileRule.Path.Substring(0, fileRule.Path.IndexOf(pathName + ".*"));
+                            if ((GetPath(parentPath) == currentPath || parentPath == "") && fileName == pathName)
+                            {
+                                FilePermission = UpdateFileRules(FilePermission, fileRule);
+                            }
+                        }
+                        else if (GetPath(fileRule.Path) == GetValidPath(location + name))
+                        {
+                            FilePermission = UpdateFileRules(FilePermission, fileRule);
+                        }
+                    }
+                }
+                return FilePermission;
+            }
+            else
+            {
+                if (this.AccessDetails.AccessRules == null) { return null; }
+                foreach (AccessRule folderRule in AccessDetails.AccessRules)
+                {
+                    if (folderRule.Path != null && folderRule.IsFile == false && (folderRule.Role == null || folderRule.Role == AccessDetails.Role))
+                    {
+                        if (folderRule.Path.IndexOf("*") > -1)
+                        {
+                            string parentPath = folderRule.Path.Substring(0, folderRule.Path.IndexOf("*"));
+                            if (GetValidPath(location + name).IndexOf(GetPath(parentPath)) == 0 || parentPath == "")
+                            {
+                                FilePermission = UpdateFolderRules(FilePermission, folderRule);
+                            }
+                        }
+                        else if (GetPath(this.RootPath + folderRule.Path) == GetValidPath(location + name) || GetPath(folderRule.Path) == GetValidPath(location + name + Path.DirectorySeparatorChar))
+                        {
+                            FilePermission = UpdateFolderRules(FilePermission, folderRule);
+                        }
+                        else if (GetValidPath(location + name).IndexOf(GetPath(folderRule.Path)) == 0)
+                        {
+                            FilePermission.Write = HasPermission(folderRule.WriteContents);
+                            FilePermission.WriteContents = HasPermission(folderRule.WriteContents);
+                        }
+                    }
+                }
+                return FilePermission;
+            }
         }
     }
 }
