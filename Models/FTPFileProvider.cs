@@ -1184,6 +1184,10 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
         protected FileStreamResult DownloadFile(string fullPath, string folderPath)
         {
             string tempPath = this.GetTempFilePath(fullPath, folderPath);
+            if (Path.GetFullPath(tempPath) != Path.GetDirectoryName(tempPath) + Path.DirectorySeparatorChar + Path.GetFileName(tempPath))
+            {
+                throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+            }
             FileStream fileStreamInput = new FileStream(tempPath, FileMode.Open, FileAccess.Read);
             FileStreamResult fileStreamResult = new FileStreamResult(fileStreamInput, "APPLICATION/octet-stream");
             return fileStreamResult;
@@ -1200,6 +1204,10 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
         {
             FtpWebResponse response = this.CreateResponse(fileName, WebRequestMethods.Ftp.DownloadFile);
             byte[] buffer = this.ConvertByte(response.GetResponseStream());
+            if (Path.GetFullPath(tempPath) != Path.GetDirectoryName(tempPath) + Path.DirectorySeparatorChar + Path.GetFileName(tempPath))
+            {
+                throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+            }
             using (Stream file = File.OpenWrite(tempPath))
             {
                 file.Write(buffer, 0, buffer.Length);
