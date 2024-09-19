@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
 using System.Collections.Generic;
 using Syncfusion.EJ2.FileManager.Base;
 using Syncfusion.EJ2.FileManager.FTPFileProvider;
+using System.Text.Json;
 
 namespace EJ2APIServices.Controllers
 {
@@ -68,7 +67,11 @@ namespace EJ2APIServices.Controllers
         [Route("FTPDownload")]
         public IActionResult FTPDownload(string downloadInput)
         {
-            FileManagerDirectoryContent args = JsonConvert.DeserializeObject<FileManagerDirectoryContent>(downloadInput);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            };
+            FileManagerDirectoryContent args = JsonSerializer.Deserialize<FileManagerDirectoryContent>(downloadInput, options);
             return operation.Download(args.Path, args.Names,args.Data);
         }
 
