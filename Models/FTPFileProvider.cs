@@ -12,7 +12,7 @@ using Syncfusion.EJ2.FileManager.Base;
 
 namespace Syncfusion.EJ2.FileManager.FTPFileProvider
 {
-    public class FTPFileProvider : IFTPFileProviderBase
+    public class FTPFileProvider
     {
         protected string HostName;
         protected string RootPath;
