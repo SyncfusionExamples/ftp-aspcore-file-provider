@@ -22,7 +22,7 @@ namespace EJ2APIServices.Controllers
         {
             this.operation = new FTPFileProvider();
             //Specify the FTP hostname, username and password
-            this.operation.SetFTPConnection("ftp://xxx.xx.xx.xxx/", "xxxxx", "xxxxx");
+            this.operation.SetFTPConnection("ftp://xxx.xx.xxx.xxx/", "xxxxxx", "xxxxx");
         }
         [Route("FTPFileOperations")]
         public object FTPFileOperations([FromBody] FileManagerDirectoryContent args)
