@@ -8,8 +8,4 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
-  <ItemGroup>    
-    <PackageReference Include="Syncfusion.EJ2.AspNet.Core" Version="*" />     
-  </ItemGroup>
-
 </Project>
