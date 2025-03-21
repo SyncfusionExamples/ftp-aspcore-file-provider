@@ -98,6 +98,10 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             {
                 string fullPath = this.RootPath + path;
                 fullPath = fullPath.Replace("../", "");
+                AccessPermission PathPermission = this.GetPathPermission(fullPath);
+                if (PathPermission != null && (!PathPermission.Read || !PathPermission.WriteContents))
+                    throw new UnauthorizedAccessException("'" + this.RootName + path + "' is not accessible. Access is denied.");
+
                 string directoryPath = fullPath + name;
                 try
                 {
@@ -132,6 +136,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 createData.DateCreated = createData.DateModified;
                 createData.HasChild = false;
                 createData.Type = "";
+                createData.Permission = this.GetPathPermission(directoryPath + "/");
                 FileManagerDirectoryContent[] newData = new FileManagerDirectoryContent[] { createData };
                 createResponse.Files = newData;
                 return createResponse;
@@ -178,6 +183,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     details.Modified = data[0].DateModified;
                     details.Created = details.Modified;
                     details.Location = this.RootName + ((data[0].FilterPath == "") ? "" : (data[0].FilterPath + data[0].Name));
+                    details.Permission = GetPermission(Path.Combine(this.RootPath, data[0].FilterPath), data[0].Name, isFile);
                 }
                 else
                 {
@@ -247,6 +253,9 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     string fullPath = basePath + names[i];
                     string[] fileDetails = this.SplitPath(fullPath, true);
                     bool isFile = data[i].IsFile;
+                    AccessPermission permission = GetPermission(fileDetails[0], fileDetails[1], isFile);
+                    if (permission != null && (!permission.Read || !permission.Write))
+                        throw new UnauthorizedAccessException("'" + this.RootName + path + names[i] + "' is not accessible. Access is denied.");
                 }
                 List<FileManagerDirectoryContent> items = new List<FileManagerDirectoryContent>();
                 for (int i = 0; i < names.Length; i++)
@@ -291,6 +300,10 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
 
                 string[] fileDetails = this.SplitPath(fullPath, true);
                 bool isFile = data[0].IsFile;
+                AccessPermission permission = GetPermission(fileDetails[0], fileDetails[1], isFile);
+                if (permission != null && (!permission.Read || !permission.Write))
+                    throw new UnauthorizedAccessException("'" + this.RootName + path + name + "' is not accessible. Access is denied.");
+
                 List<FileManagerDirectoryContent> items = new List<FileManagerDirectoryContent>();
                 string[] desDetails = this.SplitPath(newFullPath, true);
                 if (this.IsExist(desDetails[0], desDetails[1], true))
@@ -380,6 +393,17 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 }
                 string desPath = this.RootPath + targetPath;
                 desPath = desPath.Replace("../", "");
+                AccessPermission PathPermission = this.GetPathPermission(desPath);
+                if (PathPermission != null && (!PathPermission.Read || !PathPermission.WriteContents))
+                    throw new UnauthorizedAccessException("'" + this.RootName + targetPath + "' is not accessible. Access is denied.");
+
+                for (int i = 0; i < names.Length; i++)
+                {
+                    AccessPermission permission = GetPermission(Path.Combine(this.RootPath, data[i].FilterPath), data[i].Name, data[i].IsFile);
+                    if (permission != null && (!permission.Read || !permission.Copy))
+                        throw new UnauthorizedAccessException("'" + this.RootName + path + names[i] + "' is not accessible. Access is denied.");
+                }
+
                 List<string> existingFiles = new List<string>();
                 List<string> missingFiles = new List<string>();
                 List<FileManagerDirectoryContent> items = new List<FileManagerDirectoryContent>();
@@ -519,6 +543,17 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 }
                 string desPath = this.RootPath + targetPath;
                 desPath = desPath.Replace("../", "");
+                AccessPermission PathPermission = this.GetPathPermission(desPath);
+                if (PathPermission != null && (!PathPermission.Read || !PathPermission.WriteContents))
+                    throw new UnauthorizedAccessException("'" + this.RootName + targetPath + "' is not accessible. Access is denied.");
+
+                for (int i = 0; i < names.Length; i++)
+                {
+                    AccessPermission permission = GetPermission(Path.Combine(this.RootPath, data[i].FilterPath), data[i].Name, data[i].IsFile);
+                    if (permission != null && (!permission.Read || !permission.Write))
+                        throw new UnauthorizedAccessException("'" + this.RootName + path + names[i] + "' is not accessible. Access is denied.");
+                }
+
                 List<string> existingFiles = new List<string>();
                 List<string> missingFiles = new List<string>();
                 List<FileManagerDirectoryContent> items = new List<FileManagerDirectoryContent>();
@@ -692,6 +727,9 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                     string fullPath = basePath + names[i];
                     string[] fileDetails = this.SplitPath(fullPath, true);
                     bool isFile = data[i].IsFile;
+                    AccessPermission permission = GetPermission(fileDetails[0], fileDetails[1], isFile);
+                    if (permission != null && (!permission.Read || !permission.Download))
+                        throw new UnauthorizedAccessException("'" + this.RootName + path + names[i] + "' is not accessible. Access is denied.");
                     if (isFile)
                     {
                         count++;
@@ -728,7 +766,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                             string fullPath = basePath + names[i];
                             using (archive = ZipFile.Open(tempPath, ZipArchiveMode.Update))
                             {
-                                tempFileName = this.GetTempFilePath(fullPath, folderPath);
+                                tempFileName = SanitizeAndValidatePath(this.GetTempFilePath(fullPath, folderPath));
                                 zipEntry = archive.CreateEntryFromFile(tempFileName, names[i], CompressionLevel.Fastest);
                             }
                         }
@@ -756,6 +794,10 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             {
                 string fullPath = this.RootPath + path;
                 fullPath = fullPath.Replace("../", "");
+                AccessPermission PathPermission = GetPathPermission(fullPath);
+                if (PathPermission != null && (!PathPermission.Read || !PathPermission.Upload))
+                    throw new UnauthorizedAccessException("'" + this.RootName + path + "' is not accessible. Access is denied.");
+
                 List<string> existFiles = new List<string>();
                 foreach (IFormFile file in uploadFiles)
                 {
@@ -812,6 +854,9 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             {
                 string fullPath = this.RootPath + path;
                 fullPath = fullPath.Replace("../", "");
+                AccessPermission PathPermission = this.GetFilePermission(fullPath);
+                if (PathPermission != null && !PathPermission.Read)
+                    return null;
                 string folderPath = Path.Combine(Path.GetTempPath(), "image_temp");
                 if (!Directory.Exists(folderPath))
                 {
@@ -923,9 +968,9 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 }
                 return size;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                throw e;
+                throw;
             }
         }
 
@@ -972,7 +1017,19 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             cwd.HasChild = this.HasChild(fullPath);
             cwd.Type = "";
             cwd.FilterPath = (path == "/") ? "" : this.GetFilterPath(this.SplitPath(fullPath)[0]);
+            cwd.Permission = this.GetPathPermission(fullPath);
             return cwd;
+        }
+
+        protected AccessPermission GetPathPermission(string path)
+        {
+            string[] fileDetails = this.SplitPath(path);
+            return this.GetPermission(fileDetails[0], fileDetails[1], false);
+        }
+        protected AccessPermission GetFilePermission(string path)
+        {
+            string parentPath = path.Substring(0, path.LastIndexOf("/") + 1);
+            return GetPermission(parentPath, path.Substring(path.LastIndexOf("/") + 1), true);
         }
 
         protected string[] SplitPath(string path, bool isFile = false)
@@ -992,6 +1049,111 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
         protected string GetPath(string path)
         {
             return (this.RootPath + path);
+        }
+
+        protected AccessPermission GetPermission(string location, string name, bool isFile)
+        {
+            AccessPermission FilePermission = new AccessPermission();
+            if (isFile)
+            {
+                if (this.AccessDetails.AccessRules == null)
+                {
+                    return null;
+                }
+                string nameExtension = this.GetFileExtension(name).ToLower();
+                string fileName = this.GetFileNameWithoutExtension(name);
+                string currentPath = (location);
+                foreach (AccessRule fileRule in AccessDetails.AccessRules)
+                {
+                    if (!string.IsNullOrEmpty(fileRule.Path) && (fileRule.Role == null || fileRule.Role == AccessDetails.Role))
+                    {
+                        if (fileRule.Path.IndexOf("*.*") > -1)
+                        {
+                            string parentPath = fileRule.Path.Substring(0, fileRule.Path.IndexOf("*.*"));
+                            if (currentPath.IndexOf(GetPath(parentPath)) == 0 || parentPath == "")
+                            {
+                                FilePermission = UpdateFileRules(FilePermission, fileRule);
+                            }
+                        }
+                        else if (fileRule.Path.IndexOf("*.") > -1)
+                        {
+                            string pathExtension = this.GetFileExtension(fileRule.Path).ToLower();
+                            string parentPath = fileRule.Path.Substring(0, fileRule.Path.IndexOf("*."));
+                            if ((GetPath(parentPath) == currentPath || parentPath == "") && nameExtension == pathExtension)
+                            {
+                                FilePermission = UpdateFileRules(FilePermission, fileRule);
+                            }
+                        }
+                        else if (fileRule.Path.IndexOf(".*") > -1)
+                        {
+                            string pathName = this.GetFileNameWithoutExtension(fileRule.Path);
+                            string parentPath = fileRule.Path.Substring(0, fileRule.Path.IndexOf(pathName + ".*"));
+                            if ((GetPath(parentPath) == currentPath || parentPath == "") && fileName == pathName)
+                            {
+                                FilePermission = UpdateFileRules(FilePermission, fileRule);
+                            }
+                        }
+                        else if (GetPath(fileRule.Path) == (location + name))
+                        {
+                            FilePermission = UpdateFileRules(FilePermission, fileRule);
+                        }
+                    }
+                }
+                return FilePermission;
+            }
+            else
+            {
+                if (this.AccessDetails.AccessRules == null)
+                {
+                    return null;
+                }
+                foreach (AccessRule folderRule in AccessDetails.AccessRules)
+                {
+                    if (folderRule.Path != null && (folderRule.Role == null || folderRule.Role == AccessDetails.Role))
+                    {
+                        if (folderRule.Path.IndexOf("*") > -1)
+                        {
+                            string parentPath = folderRule.Path.Substring(0, folderRule.Path.IndexOf("*"));
+                            if ((location + name).IndexOf(GetPath(parentPath)) == 0 || parentPath == "")
+                            {
+                                FilePermission = UpdateFolderRules(FilePermission, folderRule);
+                            }
+                        }
+                        else if (GetPath(folderRule.Path) == (location + name) || GetPath(folderRule.Path) == (location + name + "/"))
+                        {
+                            FilePermission = UpdateFolderRules(FilePermission, folderRule);
+                        }
+                        else if ((location + name).IndexOf(GetPath(folderRule.Path)) == 0)
+                        {
+                            FilePermission.Write = HasPermission(folderRule.WriteContents);
+                            FilePermission.WriteContents = HasPermission(folderRule.WriteContents);
+                        }
+                    }
+                }
+                return FilePermission;
+            }
+        }
+        protected AccessPermission UpdateFileRules(AccessPermission filePermission, AccessRule fileRule)
+        {
+            filePermission.Copy = HasPermission(fileRule.Copy);
+            filePermission.Download = HasPermission(fileRule.Download);
+            filePermission.Write = HasPermission(fileRule.Write);
+            filePermission.Read = HasPermission(fileRule.Read);
+            return filePermission;
+        }
+        protected AccessPermission UpdateFolderRules(AccessPermission folderPermission, AccessRule folderRule)
+        {
+            folderPermission.Copy = HasPermission(folderRule.Copy);
+            folderPermission.Download = HasPermission(folderRule.Download);
+            folderPermission.Write = HasPermission(folderRule.Write);
+            folderPermission.WriteContents = HasPermission(folderRule.WriteContents);
+            folderPermission.Read = HasPermission(folderRule.Read);
+            folderPermission.Upload = HasPermission(folderRule.Upload);
+            return folderPermission;
+        }
+        protected bool HasPermission(Permission rule)
+        {
+            return rule == Permission.Allow ? true : false;
         }
 
         protected byte[] ConvertByte(Stream input)
@@ -1031,9 +1193,9 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 double num = Math.Round(bytes / Math.Pow(1024, loc), 1);
                 return (Math.Sign(fileSize) * num).ToString() + " " + index[loc];
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                throw e;
+                throw;
             }
         }
 
@@ -1077,18 +1239,18 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                         if (!detail.IsFile)
                         {
                             string nestedPath = searchPath + detail.Name + "/";
-
-                            this.NestedSearch(nestedPath, foundedFiles, searchString, caseSensitive);
+                            AccessPermission permission = this.GetPathPermission(nestedPath);
+                            if (permission == null || permission.Read)
+                            {
+                                this.NestedSearch(nestedPath, foundedFiles, searchString, caseSensitive);
+                            }
                         }
                     }
                     line = reader.ReadLine();
                 }
                 reader.Close();
             }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            catch (Exception) { throw; }
         }
 
         protected void UpdateFileDetails(List<FileManagerDirectoryContent> items, FileManagerDirectoryContent item, string fullPath, string line)
@@ -1096,6 +1258,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             item.DateCreated = item.DateModified;
             item.HasChild = false;
             item.Type = this.GetFileExtension(line);
+            item.Permission = this.GetPermission(fullPath, line, true);
             items.Add(item);
         }
 
@@ -1106,6 +1269,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             item.DateCreated = item.DateModified;
             item.HasChild = this.HasChild(nestedPath);
             item.Type = "";
+            item.Permission = this.GetPathPermission(nestedPath);
             items.Add(item);
         }
 
@@ -1121,6 +1285,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             item.HasChild = isFile ? false : this.HasChild(nestedPath);
             item.Type = isFile ? this.GetFileExtension(name) : "";
             item.FilterPath = this.GetFilterPath(fullPath);
+            item.Permission = this.GetPermission(fullPath, name, isFile);
             return item;
         }
 
@@ -1163,10 +1328,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 }
                 reader.Close();
             }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            catch (Exception) { throw; }
         }
 
         protected void UploadFile(IFormFile file, string fileName)
@@ -1181,7 +1343,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
 
         protected FileStreamResult DownloadFile(string fullPath, string folderPath)
         {
-            string tempPath = this.GetTempFilePath(fullPath, folderPath);
+            string tempPath = SanitizeAndValidatePath(this.GetTempFilePath(fullPath, folderPath));
             if (Path.GetFullPath(tempPath) != Path.GetDirectoryName(tempPath) + Path.DirectorySeparatorChar + Path.GetFileName(tempPath))
             {
                 throw new UnauthorizedAccessException("Access denied for Directory-traversal");
@@ -1200,6 +1362,7 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
 
         protected void CopyFile(string fileName, string tempPath)
         {
+            tempPath = SanitizeAndValidatePath(tempPath);
             FtpWebResponse response = this.CreateResponse(fileName, WebRequestMethods.Ftp.DownloadFile);
             byte[] buffer = this.ConvertByte(response.GetResponseStream());
             if (Path.GetFullPath(tempPath) != Path.GetDirectoryName(tempPath) + Path.DirectorySeparatorChar + Path.GetFileName(tempPath))
@@ -1249,7 +1412,8 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 for (int j = 0; j < fileList.Count; j++)
                 {
                     fileName = fileList[j].Substring(folderPath.Length + 1);
-                    zipEntry = archive.CreateEntryFromFile(fileList[j], fileName, CompressionLevel.Fastest);
+                    string safePath = SanitizeAndValidatePath(fileList[j]);
+                    zipEntry = archive.CreateEntryFromFile(safePath, fileName, CompressionLevel.Fastest);
                 }
             }
             FileStream fileStreamInput = new FileStream(tempPath, FileMode.Open, FileAccess.Read, FileShare.Delete);
@@ -1411,6 +1575,30 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             public string Name { get; set; }
 
             public long Size { get; set; }
+        }
+
+        private string SanitizeAndValidatePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Path cannot be null or empty.");
+            }
+            string decodedPath;
+            do
+            {
+                decodedPath = path;
+                path = Uri.UnescapeDataString(decodedPath);
+            } while (decodedPath != path);
+            string fullPath = Path.GetFullPath(path);
+
+            // Ensure the path is within the allowed directory
+            string allowedDirectory = Path.GetFullPath(Path.GetTempPath());
+            if (!fullPath.StartsWith(allowedDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Access to the path is not allowed.");
+            }
+
+            return fullPath;
         }
     }
 }
