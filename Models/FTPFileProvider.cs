@@ -767,7 +767,8 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                             using (archive = ZipFile.Open(tempPath, ZipArchiveMode.Update))
                             {
                                 tempFileName = SanitizeAndValidatePath(this.GetTempFilePath(fullPath, folderPath));
-                                zipEntry = archive.CreateEntryFromFile(tempFileName, names[i], CompressionLevel.Fastest);
+                                var safeEntryName = SanitizeZipEntryName(names[i]);
+                                zipEntry = archive.CreateEntryFromFile(tempFileName, safeEntryName, CompressionLevel.Fastest);
                             }
                         }
                         FileStream fileStreamInput = new FileStream(tempPath, FileMode.Open, FileAccess.Read, FileShare.Delete);
@@ -1407,13 +1408,19 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
                 for (int j = 0; j < folderList.Count; j++)
                 {
                     fileName = folderList[j].Substring(folderPath.Length + 1);
-                    zipEntry = archive.CreateEntry(fileName);
+                    var safeDirEntry = SanitizeZipEntryName(fileName);
+                    if (!string.IsNullOrEmpty(safeDirEntry))
+                    {
+                        if (!safeDirEntry.EndsWith("/")) safeDirEntry += "/";
+                        zipEntry = archive.CreateEntry(safeDirEntry);
+                    }
                 }
                 for (int j = 0; j < fileList.Count; j++)
                 {
                     fileName = fileList[j].Substring(folderPath.Length + 1);
                     string safePath = SanitizeAndValidatePath(fileList[j]);
-                    zipEntry = archive.CreateEntryFromFile(safePath, fileName, CompressionLevel.Fastest);
+                    var safeEntry = SanitizeZipEntryName(fileName);
+                    zipEntry = archive.CreateEntryFromFile(safePath, safeEntry, CompressionLevel.Fastest);
                 }
             }
             FileStream fileStreamInput = new FileStream(tempPath, FileMode.Open, FileAccess.Read, FileShare.Delete);
@@ -1599,6 +1606,28 @@ namespace Syncfusion.EJ2.FileManager.FTPFileProvider
             }
 
             return fullPath;
+        }
+        private static string SanitizeZipEntryName(string entryName)
+        {
+            if (string.IsNullOrEmpty(entryName))
+                return string.Empty;
+            string s = entryName.Replace('\\', '/');
+            if (s.Length >= 2 && char.IsLetter(s[0]) && s[1] == ':')
+                s = s.Substring(2);
+            while (s.Length > 0 && s[0] == '/')
+                s = s.Substring(1);
+            if (s.Length == 0)
+                return string.Empty;
+            var parts = s.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var safeParts = new List<string>(parts.Length);
+            foreach (var seg in parts)
+            {
+                if (seg == "." || seg.Length == 0) continue;
+                if (seg == "..")
+                    throw new UnauthorizedAccessException("Invalid zip entry name (path traversal not allowed).");
+                safeParts.Add(seg);
+            }
+            return string.Join('/', safeParts);
         }
     }
 }
