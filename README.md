@@ -1,6 +1,6 @@
 # FTP service for the file manager component
 
-This repository contains the ASP.NET Core file transfer protocol file system providers for the Syncfusion File Manager component.
+This repository contains the ASP.NET Core file transfer protocol file system providers for the File Manager component.
 
 ## Key Features
 
